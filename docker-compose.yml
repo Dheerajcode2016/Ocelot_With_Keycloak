@@ -1,0 +1,59 @@
+version: '3.4'
+
+services:
+  keycloak.poc.gateway:
+    image: keycloakpocgateway
+    build:
+      context: .
+      dockerfile: Keycloak.POC.Gateway/Dockerfile
+    networks:
+      - keycloak-poc-net
+    ports:
+      - "80:80"
+      - "443:443"
+
+  consoletest:
+    image: consoletest
+    build:
+      context: .
+      dockerfile: ConsoleTest/Dockerfile
+    networks:
+      - keycloak-poc-net
+
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: keycloak
+      MYSQL_USER: keycloak
+      MYSQL_PASSWORD: password
+    networks:
+      - keycloak-poc-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      DB_VENDOR: MYSQL
+      DB_ADDR: mysql
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_PASSWORD: password
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: Pa55w0rd
+      # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the MySQL JDBC driver documentation in order to use it.
+      #JDBC_PARAMS: "connectTimeout=30000"
+    ports:
+      - 8080:8080
+    networks:
+      - keycloak-poc-net
+    depends_on:
+      - mysql
+
+networks:
+  keycloak-poc-net:
+volumes:
+  mysql_data:
+      driver: local
+  keycloak-datastore:
